@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Unified Booking - WebAI</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.4.29/dist/vue.global.prod.js"></script>
+    <link rel="stylesheet" type="text/css" href="../style.css" />
+  </head>
+  <body>
+    <div id="flightApp"></div>
+    <div id="hotelApp"></div>
+    <script type="module">
+      import { load, flight, hotel } from '../action.js'
+      import * as entry from '../indexedDB/entry.js'
+      import ai from '../ai.js'
+
+      const config = {
+        remotes: {
+          gemini: {
+            model: 'gemini-1.5-flash'
+          }
+        },
+        locals: {
+          gemma: {
+            randomSeed: 1,
+            maxTokens: 1024
+          },
+          llama: {
+            baseUrl: 'http://localhost:11434'
+          },
+          geminiNano: {
+            temperature: 0.8,
+            topK: 3
+          }
+        },
+        local_priority: ['llama', 'gemma', 'geminiNano'],
+        prefer: 'remote'
+      }
+
+      const flightRequest = async (request, display) => {
+        const session = await ai.connect(config)
+        await session.prompt(request, display)
+      }
+
+      const hotelRequest = async (request, display) => {
+        const option = {
+          local_priority: ['geminiNano', 'gemma'],
+          prefer: 'local'
+        }
+
+        const session = await ai.connect({ ...config, ...option })
+        await session.prompt(request, display)
+      }
+
+      flightApp.innerHTML = await load('../flight.html')
+      flight(entry)({ dom: '#flightApp', unifiedApi: flightRequest })
+
+      hotelApp.innerHTML = await load('../hotel.html')
+      hotel(entry)({ dom: '#hotelApp', needCategory: true, unifiedApi: hotelRequest })
+    </script>
+  </body>
+</html>

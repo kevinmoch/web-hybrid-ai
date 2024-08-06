@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Progressive AI Web Application</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.4.29/dist/vue.global.prod.js"></script>
+    <link rel="stylesheet" type="text/css" href="../style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <h2>Use Cases for Progressive AI Web Application</h2>
+      <div>For more details on Progressive AI Web Application, please refer to <a href="PAWA.pdf" target="_blank">PAWA.pdf</a></div>
+      <fieldset>
+        <legend>Hotel Booking</legend>
+        <div>In a hotel booking app, an AI-assisted booking feature is available. Assuming the user's request is:</div>
+        <div class="container">
+          <span class="content"><input type="text" v-model="hotelRequest" /></span>
+          <span class="button"><button title="Send Request" @click="sendRequest">Send Request</button></span>
+        </div>
+        <div>
+          <div>
+            <div><input type="radio" id="remote" value="remote" v-model="hotelScenario" /><label for="remote">Direct access to remote LLM services</label></div>
+            <div class="desc indent">
+              As local devices lack LLM support, web applications access remote LLM services via the core tier. These services return a list of hotels across different price ranges:
+            </div>
+            <div class="output indent"><textarea id="hotelRemoteOutput"></textarea></div>
+          </div>
+          <div>
+            <div><input type="radio" id="hybrid" value="hybrid" v-model="hotelScenario" /><label for="hybrid">Access to local device LLM service</label></div>
+            <div class="desc indent">
+              When the LLM inference is supported on the local devices, the web application first leverages the local LLM via the local tier to retrieve the user's personal information as below:
+            </div>
+            <div class="container indent">
+              <span class="content"><input type="text" v-model="hotelUserProfile" /></span>
+              <span class="button"><button title="Infer Hotel Preference" @click="inferHotelPreference">Infer Hotel Preference</button></span>
+            </div>
+            <div class="output indent">
+              <textarea id="hotelPreferenceOutput" style="display: block; height: 20px">You need to click the "Infer Hotel Preference" first, and then click the "Send Request".</textarea>
+            </div>
+            <div class="desc indent">Then, based on the user preferences, it optimizes the user's needs and sends a request to the remote LLM service through the core tier:</div>
+            <div class="output indent"><textarea id="hotelHybridOutput"></textarea></div>
+          </div>
+          <div>
+            <div><input type="radio" id="local" value="local" v-model="hotelScenario" /><label for="local">Remote LLM service is slow or unavailable</label></div>
+            <div class="desc indent">
+              When local devices support LLM but the remote LLM service responds slowly or is unavailable, the web application accesses a local LLM service through the local tier:
+            </div>
+            <div class="output indent"><textarea id="hotelLocalOutput"></textarea></div>
+          </div>
+        </div>
+      </fieldset>
+    </div>
+
+    <script type="module">
+      import { connectRemoteModel, connectLocalModel, displayResult, clearResult } from '../model.js'
+
+      const app = Vue.createApp({
+        data() {
+          return {
+            hotelRequest: 'I am planning a trip to New York, please list popular hotels with introduction and average prices.',
+            hotelUserProfile: 'As a female college student traveling with a daily budget of $200, please list my hotel requirements.',
+            hotelScenario: 'remote',
+            hotelPreference: '',
+            remoteModel: null,
+            localModel: null
+          }
+        },
+        methods: {
+          async sendRequest(e) {
+            const content = this.hotelRequest
+            const button = e.target
+            let output = null
+
+            switch (this.hotelScenario) {
+              case 'hybrid':
+                output = document.getElementById('hotelHybridOutput')
+                clearResult(output, button, 'Sending request...')
+
+                this.remoteModel = this.remoteModel || (await connectRemoteModel())
+                this.remoteModel.generateResponse(content + this.hotelPreference, displayResult(output, button))
+                break
+              case 'local':
+                output = document.getElementById('hotelLocalOutput')
+                clearResult(output, button, 'Loading the model...')
+
+                this.localModel = this.localModel || (await connectLocalModel())
+                this.localModel.generateResponse(content, displayResult(output, button))
+                break
+              case 'remote':
+              default:
+                output = document.getElementById('hotelRemoteOutput')
+                clearResult(output, button, 'Sending request...')
+
+                this.remoteModel = this.remoteModel || (await connectRemoteModel())
+                this.remoteModel.generateResponse(content, displayResult(output, button))
+            }
+          },
+          async inferHotelPreference(e) {
+            const button = e.target
+            const output = document.getElementById('hotelPreferenceOutput')
+            clearResult(output, button, 'Loading the model...')
+
+            this.localModel = this.localModel || (await connectLocalModel())
+            await this.localModel.generateResponse(this.hotelUserProfile, displayResult(output, button))
+            this.hotelPreference = output.textContent
+          }
+        }
+      })
+
+      app.mount('#app')
+    </script>
+  </body>
+</html>

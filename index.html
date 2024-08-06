@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web App Development with a Hybrid AI Architecture</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+      function loadMarkdownFile() {
+        fetch(navigator.language.startsWith('en') ? 'README.md' : `README.${navigator.language}.md`)
+          .then((response) => response.text())
+          .then((markdown) => {
+            document.getElementById('markdown').innerHTML = marked.parse(markdown)
+          })
+      }
+    </script>
+    <style>
+      li {
+        margin-bottom: 10px;
+      }
+      li > ul {
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body onload="loadMarkdownFile()">
+    <div id="markdown"></div>
+  </body>
+</html>

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hotel Booking - WebAI</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.4.29/dist/vue.global.prod.js"></script>
+    <link rel="stylesheet" type="text/css" href="../style.css" />
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      import { load, hotel } from '../action.js'
+      import * as entry from '../indexedDB/entry.js'
+      import connectModel from './model.js'
+
+      app.innerHTML = await load('../hotel.html')
+      hotel(entry)({ connectModel, needCategory: true })
+    </script>
+  </body>
+</html>

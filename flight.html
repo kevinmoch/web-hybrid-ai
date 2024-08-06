@@ -1,0 +1,16 @@
+<fieldset>
+  <legend>Flight Booking</legend>
+  <div>In a flight booking app, an AI-assisted booking feature is available. Assuming the user's request is:</div>
+  <div class="container">
+    <span class="content"><input type="text" v-model="flightRequest" /></span>
+    <span class="button"><button title="Send Request" @click="sendRequest">Send Request</button></span>
+  </div>
+  <div class="output indent"><textarea id="flightRemoteOutput"></textarea></div>
+  <div>
+    <button class="entry" disabled @click="insert">Insert Entry</button>
+    <button class="entry" disabled @click="update">Update Entry</button>
+    <button class="entry" disabled @click="remove">Remove Entry</button>
+    <button class="entry" @click="query">Query Entry</button>
+    <button class="entry" @click="clear">Clear All</button>
+  </div>
+</fieldset>

@@ -1,0 +1,19 @@
+<fieldset>
+  <legend>Hotel Booking</legend>
+  <div>In a hotel booking app, an AI-assisted booking feature is available. Assuming the user's personal information as below:</div>
+  <div class="container">
+    <span class="profile"><input type="text" v-model="content" /></span>
+  </div>
+  <div>
+    <button class="entry" @click="insert">Insert Entry</button>
+    <button class="entry" @click="update">Update Entry</button>
+    <button class="entry" @click="remove">Remove Entry</button>
+    <button class="entry" @click="query">Query Entry</button>
+    <button class="entry" @click="clear">Clear All</button>
+  </div>
+  <div class="container">
+    <span class="content"><input type="text" v-model="hotelRequest" /></span>
+    <span class="button"><button title="Send Request" @click="sendRequest">Send Request</button></span>
+  </div>
+  <div class="output"><textarea id="hotelLocalOutput"></textarea></div>
+</fieldset>
