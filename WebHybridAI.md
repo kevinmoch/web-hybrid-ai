@@ -547,7 +547,7 @@ Next, we’ll open a hotel booking web app to find a place to stay based on our 
 
 ### 4.2 Booking Flight & Hotel Architecture
 
-![Booking App](./WebHybridAI.png 'Booking Flight & Hotel Architecture')
+![Booking App](WebHybridAI.png 'Booking Flight & Hotel Architecture')
 
 As shown in the diagram above, the architecture of the flight booking app and the hotel booking app is as follows. The application process using Web API for Hybrid AI can be divided into the following steps:
 
@@ -567,7 +567,7 @@ This process ensures that both the flight and hotel suggestions are highly perso
 
 The following demo simulates two independent apps interacting with local and remote AI models to recommend flights and hotels.
 
-![Booking Demo](./demo.gif 'Booking Flight & Hotel Demo')
+![Booking Demo](demo.gif 'Booking Flight & Hotel Demo')
 
 As you can see in the animation, there are two web apps being demonstrated: a flight booking app on the left and a hotel booking app on the right. The demo process can be broken down into the following steps:
 
@@ -626,7 +626,7 @@ const result1 = await session1.prompt('who are you')
 
 The following animation shows an example of what happens when we call the `connect` method. It tries to connect to the `Gemini`, `Llama`, and `GeminiNano` models one by one, but they all fail. Finally, it successfully connects to the `Gemma` model. To make it easier to see what's happening in the browser console, we've added some messages to show when the connection is successful or fails.
 
-![Connection Demo](./connect.gif 'Connection API Demo')
+![Connection Demo](connect.gif 'Connection API Demo')
 
 You can find the source code for this demo on GitHub at [Unified Demo](https://github.com/kevinmoch/web-hybrid-ai/blob/main/webAI/unified.html).
 
