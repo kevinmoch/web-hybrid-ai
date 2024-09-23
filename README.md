@@ -8,7 +8,7 @@ Draft Proposal, September 2024
 
 **Editors:** Chunhui Mo (Huawei), Martin Alvarez (Huawei)
 
-**Translations:** [简体中文](https://github.com/kevinmoch/web-hybrid-ai/blob/main/WebHybridAI.zh-CN.md)
+**Translations:** [简体中文](https://github.com/kevinmoch/web-hybrid-ai/blob/main/README.zh-CN.md)
 
 <hr>
 
