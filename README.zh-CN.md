@@ -8,7 +8,7 @@
 
 **作者:** Chunhui Mo (Huawei), Martin Alvarez (Huawei)
 
-**翻译:** [英文](https://github.com/kevinmoch/web-hybrid-ai/blob/main/WebHybridAI.md)
+**翻译:** [英文](https://github.com/kevinmoch/web-hybrid-ai/blob/main/README.md)
 
 <hr>
 
