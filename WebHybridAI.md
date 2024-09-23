@@ -34,7 +34,6 @@ The following are not within our scope of concern:
 
 - Issues faced by hybrid AI, such as model management, elasticity through hybrid AI, and user experience, as this topic has already been discussed in [Hybrid AI Presentations](https://github.com/webmachinelearning/hybrid-ai/tree/main/presentations) in the WebML IG, and will be covered in the sessions on [AI Model Management](https://github.com/w3c/tpac2024-breakouts/issues/15).
 
-
 ## 2. Connection API
 
 ### 2.1 Connection API Goals
@@ -150,7 +149,6 @@ Some notes on this sample:
 ### 2.4 Connection API Implementation References
 
 ```js
-
 // Define an asynchronous function to connect to the Gemini model
 const gemini = async (options = {}) => {
   // Create a new instance of the GoogleGenerativeAI class using the API key
@@ -161,8 +159,8 @@ const gemini = async (options = {}) => {
 
   // Get the generative model from GoogleGenerativeAI by merging default and custom options
   const model = genAI.getGenerativeModel({
-    ...defaultOption,  // Use the default Gemini model version
-    ...options         // Override or add any additional options passed in
+    ...defaultOption, // Use the default Gemini model version
+    ...options // Override or add any additional options passed in
   })
 
   // Define a function to generate a response from the model based on the input content
@@ -186,18 +184,18 @@ const gemini = async (options = {}) => {
 }
 
 // Define an asynchronous function to connect to the Gemma model
-const gemma = async (options = {}) => { 
-  // ... 
+const gemma = async (options = {}) => {
+  // ...
 }
 
 // Define an asynchronous function to connect to the Llama model
-const llama = async (options = {}) => { 
-  // ... 
+const llama = async (options = {}) => {
+  // ...
 }
 
 // Define an asynchronous function to connect to the GeminiNano model
-const geminiNano = async (options = {}) => { 
-  // ... 
+const geminiNano = async (options = {}) => {
+  // ...
 }
 
 // Add the Gemini model function to the models object, along with others like gemma, llama, and geminiNano
@@ -227,7 +225,7 @@ const tryConnect = async (prior) => {
   }
 
   // Return the connected model and the connection function
-  return [model, connect] 
+  return [model, connect]
 }
 
 // Function to switch models dynamically
@@ -303,7 +301,7 @@ const connect = async ({ remotes = {}, remote_priority, locals = {}, local_prior
   const [model, connect] = await tryConnect(prior)
 
   // Create a session with the connected model
-  return createSession(model, connect, prior, remotes, locals) 
+  return createSession(model, connect, prior, remotes, locals)
 }
 ```
 
@@ -387,7 +385,6 @@ const flightInfo = await remoteSession.prompt(userPlan)
 // Web App A stores the flight info in the user’s personalized data
 await ai.insertEntry('travel', flightInfo)
 
-
 // =====================================================
 
 // Web App B connects to an on-device model
@@ -428,7 +425,7 @@ const embeddings = new OllamaEmbeddings(ollamaSetting)
 const insertEntry = async (category, content) => {
   // Create a new Chroma vector store instance with the given embeddings and collection name
   const vectorStore = new Chroma(embeddings, { collectionName })
-  
+
   // Add the document with the provided content and metadata (category)
   const ids = await vectorStore.addDocuments([
     {
@@ -436,7 +433,7 @@ const insertEntry = async (category, content) => {
       metadata: { category } // Metadata indicating the entry's category
     }
   ])
-  
+
   // Return the ID of the newly added entry
   return ids[0]
 }
@@ -473,7 +470,7 @@ Explanation of the implementation:
 
 - The code demonstrates one way to store data locally, specifically using a vector database called `Chroma`. A vector database is built to store and retrieve high-dimensional vector data. `Chroma` is just one of these databases. In this case, we’re turning the text data (referred to as Entry) into high-dimensional vector representations and saving them locally. To do this, we first need to run the `Chroma` vector database locally and then use Chroma's API to store vectors.
 
-- Once we've stored user behavior data, personal information, or any other content as vectors, we can then convert user queries or questions into vectors as well. These query vectors are used to search the vector database for the most similar entries, which serve as context. This context is then fed into a LLM, such as `Llama`, to generate more accurate and relevant responses. 
+- Once we've stored user behavior data, personal information, or any other content as vectors, we can then convert user queries or questions into vectors as well. These query vectors are used to search the vector database for the most similar entries, which serve as context. This context is then fed into a LLM, such as `Llama`, to generate more accurate and relevant responses.
 
 - Earlier, in the `Connection API Implementation References`, we included a method for connecting to the Llama LLM. This following code shows how to connect `Chroma` and `Llama` to create a system that retrieves relevant context from a database and passes it to a LLM like `Llama` to generate answers. This process is made possible by using the `LangChain` framework for LLM app development and `Ollama`, which is a tool for deploying and running local LLMs.
 
@@ -535,6 +532,7 @@ const llama = async (options = {}) => {
   return { generateResponse } // Return the response generator
 }
 ```
+
 The technology used in the code is RAG, short for Retrieval Augmented Generation. It's a technique used in natural language processing (NLP) to improve the quality and relevance of generated text.
 
 ## 4 A Showcase of Hybrid AI App
@@ -557,7 +555,7 @@ As shown in the diagram above, the architecture of the flight booking app and th
 
 3. The `Hotel Assistant` in the hotel booking app collects user info, vectorizes it through the `Storage API`, and saves it as `Categorized Entries` in the `Chroma` database as well.
 
-4. The `Hotel Assistant` then sends a request to a local `on-device model` to figure out the user’s hotel preferences, considering both the user info and flight info. 
+4. The `Hotel Assistant` then sends a request to a local `on-device model` to figure out the user’s hotel preferences, considering both the user info and flight info.
 
 5. The `Hotel Assistant` then sends the hotel preferences to the `cloud-based model`, which returns a list of hotels that match the user’s specific needs.
 
@@ -639,15 +637,18 @@ Several aspects of the Web API for Hybrid AI deserve our considerations.
 In addition to the existing `Connection APIs`, here are some potential connection strategies that should be considered:
 
 - **Connection Timeout Settings:**
+
   - Assign a connection timeout to each model individually, so that if a specific model takes too long to respond, it can be skipped or retried.
   - Alternatively, provide a global timeout setting that applies uniformly across all models, ensuring consistent behavior when connecting to multiple models.
 
 - **Custom Connection Strategy:**
+
   - Expose a user-defined function that allows developers to create custom logic for deciding which model to access based on various conditions (e.g., user preferences, data size, model capabilities, etc.).
   - This gives developers more fine-grained control, enabling dynamic selection between `on-device` or `cloud-based` models depending on the scenario.
 
 - **Model Status Information:**
   Provide developers with the ability to check the status of each configured model before sending a request. This includes information like:
+
   - Whether the model is available and can be accessed.
   - Whether the model is currently busy processing other requests.
   - Whether the model is active or idle, so that decisions can be made on whether to wait for a model or switch to an alternative one.
@@ -669,7 +670,7 @@ In addition to the existing `Storage APIs` that integrate with a local `Chroma` 
   Similar to Connection APIs, provide developers the option to configure multiple local vector databases. Each LLM could then be paired with a specific vector store, depending on the use case or model requirements.
 
 - **Capacity Management:**
-  When storing data as public or shared entries, consider storage limitations, especially in environments with restricted space (e.g., browser-based storage or low-resource devices). 
+  When storing data as public or shared entries, consider storage limitations, especially in environments with restricted space (e.g., browser-based storage or low-resource devices).
 
 - **Error Handling for Database Failures:**
   Automatically retry failed storage operations or switch to an alternative storage method. If database corruption occurs, notify users or developers and provide recovery options such as automatic backups or rollback to a previous stable state.
