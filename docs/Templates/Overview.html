@@ -6,11 +6,47 @@
     <meta content="width=device-width" name="viewport" />
     <title>Web API for Hybrid AI</title>
     <link rel="stylesheet" href="../Templates/slides.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/default.min.css" />
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/languages/typescript.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/languages/javascript.min.js"></script>
+    <script>
+      hljs.highlightAll()
+    </script>
     <!-- To use the b6+ framework, include this: -->
     <script src="../Templates/b6plus.js"></script>
     <!-- To use the Shower framework, remove b6plus above and add these two: -->
     <!--   <script src="../Templates/shower.js"></script>         -->
     <!--   <script src="../Templates/iframe-fixup.js"></script>   -->
+    <style>
+      .slide {
+        padding-top: 0.5em;
+      }
+
+      ul {
+        font-style: italic;
+      }
+
+      pre {
+        margin: 0;
+        padding: 0;
+        height: 320px;
+        width: 540px;
+        overflow: hidden;
+      }
+
+      code {
+        margin: 0;
+        padding: 0;
+        height: 310px;
+        width: 540px;
+        font-size: 10px;
+      }
+
+      img {
+        margin-top: 10px;
+      }
+    </style>
   </head>
   <body class="shower fade-in duration=15">
     <!-- Remove this element if you don't want a progress bar: -->
@@ -20,7 +56,7 @@
        index mode and on the 2nd screen. If you keep it, you may want
        to add the class "duration=n" on BODY, where n is the initial
        number of minutes on the clock. Default is 30. -->
-    <div class="clock"></div>
+    <!-- <div class="clock"></div> -->
 
     <!-- Alternative: Show also real time and elapsed time. -->
     <!-- <div class=fullclock></div> -->
@@ -43,59 +79,459 @@
     <section class="slide" id="apis-goals">
       <h3>The following are the APIs goals:</h3>
       <ol class="emerge">
-        <li>Provide web developers with a connection strategy for accessing both on-device and cloud-based models.</li>
-        <ul>
-          <li class="next">
-            For example, if no on-device models are available, attempt to access cloud-based models. Conversely, if cloud-based models are unavailable, try accessing on-device models.
-          </li>
-        </ul>
-        <li>Provide web developers with a storage strategy for sharing user's private data.</li>
-        <ul>
-          <li class="next">
-            For example, one web app saves users' private data into a local vector database. Another web app, when accessing a on-device language model, can leverage this data through a local RAG
-            system.
-          </li>
-        </ul>
+        <li class="next">Provide web developers with a connection strategy for accessing both on-device and cloud-based models.</li>
+        <li class="next">Provide web developers with a storage strategy for sharing user's private data.</li>
       </ol>
     </section>
 
     <section class="slide" id="not-goals">
       <h3>The following are not within our scope of concern:</h3>
       <ol class="emerge">
-        <li class="next">Design a uniform JavaScript API for accessing browser-provided language models, known as the Prompt API, which is currently being explored by Chrome's built-in AI team.</li>
-        <li class="next">
-          Issues faced by hybrid AI, such as model management, elasticity through hybrid AI, and user experience, as this topic has already been discussed in Hybrid AI Presentations in the WebML IG,
-          and will be covered in the sessions on AI Model Management.
-        </li>
+        <li class="next">Design a uniform JavaScript API for accessing browser-provided language models.</li>
+        <li class="next">Issues faced by hybrid AI, such as model management, elasticity through hybrid AI, and user experience.</li>
       </ol>
     </section>
 
     <section class="slide" id="connection-api">
       <h3>Connection API</h3>
-      <ol class="emerge">
-        <li class="next">Connection API Definition in Web IDL</li>
-        <li class="next">Connection API Sample Usages</li>
-        <li class="next">Connection API Implementation References</li>
+      <ol>
+        <li>Connection API Definition in Web IDL</li>
+        <li>Connection API Sample Usages</li>
+        <li>Connection API Implementation References</li>
       </ol>
+    </section>
+
+    <section class="slide" id="connection-api-idl">
+      <div>1. Connection API Definition in Web IDL</div>
+      <pre><code class="language-typescript">interface ModelConfig {
+  DOMString? model;
+  DOMString? baseUrl;
+  // ...
+};
+
+enum ConnectionPreference { "remote", "local" };
+
+interface ConnectConfig {
+  // Cloud-based models
+  record&lt;DOMString, ModelConfig&gt; remotes;
+
+  // On-device models
+  record&lt;DOMString, ModelConfig&gt;? locals;
+
+  // Priority for accessing cloud-based models
+  sequence&lt;DOMString&gt;? remote_priority;
+
+  // Priority for accessing on-device models
+  sequence&lt;DOMString&gt;? local_priority;
+
+  // Models connection preference
+  ConnectionPreference? prefer;
+};
+
+interface AIAssistant {
+  Promise&lt;AIAssistant&gt; switchModel(DOMString modelName);
+};
+
+Promise&lt;AIAssistant&gt; connect(ConnectConfig connectConfig);
+
+[Exposed=(Window,Worker)]
+interface AIAssistantFactory {
+  Promise&lt;AIAssistant&gt; connect(ConnectConfig connectConfig);
+  Promise&lt;AIAssistant&gt; create(optional AIAssistantCreateOptions options = {});
+  // ...
+};
+
+[Exposed=(Window,Worker)]
+interface AIAssistant : EventTarget {
+  Promise&lt;AIAssistant&gt; switchModel(DOMString modelName);
+  Promise&lt;DOMString&gt; prompt(DOMString input, optional AIAssistantPromptOptions options = {});
+  // ...
+};
+        </code></pre>
+    </section>
+
+    <section class="slide" id="connection-api-usages">
+      <div>2. Connection API Sample Usages</div>
+      <pre><code class="language-javascript">const config = {
+  // Cloud-based models
+  remotes: {
+    gemini: {
+      model: 'gemini-1.5-flash'
+    }
+  },
+  // On-device models
+  locals: {
+    gemma: {
+      randomSeed: 1,
+      maxTokens: 1024
+    },
+    llama: {
+      baseUrl: 'http://localhost:11434'
+    },
+    geminiNano: {
+      temperature: 0.8,
+      topK: 3
+    }
+  },
+  // Priority for accessing on-device models
+  local_priority: ['llama', 'gemma', 'geminiNano'],
+  // Models connection preference
+  prefer: 'remote'
+}
+
+// Connect to the remote Gemini model based on the above config
+const session1 = await ai.connect(config)
+const result1 = await session1.prompt('who are you')
+
+// Switch to the Llama model that has already been defined in the config
+const session2 = await session1.switchModel('llama')
+const result2 = await session2.prompt('who are you')
+      </code></pre>
+    </section>
+
+    <section class="slide" id="connection-api-implementation">
+      <div>3. Connection API Implementation References</div>
+      <pre><code class="language-javascript">// Define an asynchronous function to connect to the Gemini model
+const gemini = async (options = {}) => {
+  // Create a new instance of the GoogleGenerativeAI class using the API key
+  const genAI = new GoogleGenerativeAI(gemini_api_key)
+
+  // Define default options for the Gemini model (version 1.5-flash)
+  const defaultOption = { model: 'gemini-1.5-flash' }
+
+  // Get the generative model from GoogleGenerativeAI by merging default and custom options
+  const model = genAI.getGenerativeModel({
+    ...defaultOption, // Use the default Gemini model version
+    ...options // Override or add any additional options passed in
+  })
+
+  // Define a function to generate a response from the model based on the input content
+  const generateResponse = async (content, display) => {
+    try {
+      // Call the model's generateContentStream method to get a stream of generated content
+      const result = await model.generateContentStream([content])
+
+      // Stream the generated content in chunks and display it
+      for await (const chunk of result.stream) {
+        display(chunk.text()) // Display each chunk of text
+      }
+      display('', true) // Signal the end of the stream
+    } catch (error) {
+      throw error.message
+    }
+  }
+
+  // Return the generateResponse function as part of the object
+  return { generateResponse }
+}
+
+// Define an asynchronous function to connect to the Gemma model
+const gemma = async (options = {}) => {
+  // ...
+}
+
+// Define an asynchronous function to connect to the Llama model
+const llama = async (options = {}) => {
+  // ...
+}
+
+// Define an asynchronous function to connect to the GeminiNano model
+const geminiNano = async (options = {}) => {
+  // ...
+}
+
+// Add the Gemini model function to the models object, along with others like gemma, llama, and geminiNano
+const models = { gemini, gemma, llama, geminiNano }
+
+// Tries to connect to models based on a prioritized list
+const tryConnect = async (prior) => {
+  let model = null // Holds the connected model once successful
+  let connect = null // Stores the function used to connect to the model
+
+  // Loop through the prioritized list of models
+  for (let i = 0; i &lt; prior.length; i++) {
+    // Get model name, connection method, and options
+    const [name, connectModel, options] = prior[i]
+    try {
+      // Try to connect to the model
+      model = await connectModel(options)
+    } catch (error) {
+      console.error('An error occurs when connecting the model', name, '\n', error)
+    }
+    if (model) {
+      console.warn('Connect model', name, 'successfully')
+      // Store the connect function
+      connect = connectModel
+      break // Exit the loop once connected to a model
+    }
+  }
+
+  // Return the connected model and the connection function
+  return [model, connect]
+}
+
+// Function to switch models dynamically
+const switchModelFn = (prior, remotes, locals) => async (modelName) => {
+  // Get the connection function for the given model
+  const connectModel = models[modelName]
+  // Get the configuration options from remotes or locals
+  const options = remotes[modelName] || locals[modelName]
+  // Connect to the new model
+  const model = await connectModel(options)
+  // Create a new session with the switched model
+  return createSession(model, connectModel, prior, remotes, locals)
+}
+
+// Function that handles generating a prompt with the model
+const promptFn = (model, connect, prior) => {
+  return async (...args) => {
+    try {
+      // Try to generate a response using the current model
+      return await model.generateResponse.apply(model, args)
+    } catch (error) {
+      console.error('Prompt failed when using the model\n', error)
+
+      // If prompt fails, try switching models from the prioritized list
+      for (let i = 0; i &lt; prior.length; i++) {
+        const [name, connectModel, options] = prior[i]
+        // Only switch if the model is different
+        if (connect !== connectModel) {
+          try {
+            // Try to connect to the alternate model
+            const subModel = await connectModel(options)
+            console.warn('Prompt failed, switch the model', name, 'successfully')
+            // Retry the prompt with the new model
+            return await subModel.generateResponse.apply(subModel, args)
+          } catch (error) {
+            console.error('Prompt failed, an error occurs when switching the model', name, '\n', error)
+          }
+        }
+      }
+    }
+  }
+}
+
+// Creates a session with the connected model
+const createSession = (model, connect, prior, remotes, locals) => {
+  if (model) {
+    return {
+      // Provide a function to generate prompts
+      prompt: promptFn(model, connect, prior),
+      // Provide a function to switch models
+      switchModel: switchModelFn(prior, remotes, locals)
+    }
+  } else {
+    throw new Error('No available model can be connected!')
+  }
+}
+
+// Connects to a model based on the provided configuration
+const connect = async ({ remotes = {}, remote_priority, locals = {}, local_priority, prefer } = {}) => {
+  // Get remote model names from priority list or default to all remotes
+  const remoteNames = remote_priority || Object.keys(remotes)
+  // Prepare an array of remote models
+  const remote = remoteNames.map((name) => [name, models[name], remotes[name]])
+
+  // Get local model names from priority list or default to all locals
+  const localNames = local_priority || Object.keys(locals)
+  // Prepare an array of local models
+  const local = localNames.map((name) => [name, models[name], locals[name]])
+
+  // Determine the priority order based on user preference (local or remote first)
+  const prior = prefer === 'local' ? local.concat(remote) : remote.concat(local)
+  // Try to connect to a model from the prioritized list
+  const [model, connect] = await tryConnect(prior)
+
+  // Create a session with the connected model
+  return createSession(model, connect, prior, remotes, locals)
+}
+      </code></pre>
     </section>
 
     <section class="slide" id="storage-api">
       <h3>Storage API</h3>
-      <ol class="emerge">
-        <li class="next">Storage API Definition in Web IDL</li>
-        <li class="next">Storage API Sample Usages</li>
-        <li class="next">Storage API Implementation References</li>
+      <ol>
+        <li>Storage API Definition in Web IDL</li>
+        <li>Storage API Sample Usages</li>
+        <li>Storage API Implementation References</li>
       </ol>
+    </section>
+
+    <section class="slide" id="storage-api-idl">
+      <div>1. Storage API Definition in Web IDL</div>
+      <pre><code class="language-typescript">[Exposed=(Window,Worker)]
+interface AIAssistantFactory {
+  // Inserts a new entry and returns its entryId
+  Promise&lt;DOMString&gt; insertEntry(DOMString category, DOMString content);
+
+  // Updates an existing entry by its entryId
+  Promise&lt;boolean&gt; updateEntry(DOMString entryId, DOMString content);
+
+  // Removes an entry by its entryId
+  Promise&lt;boolean&gt; removeEntry(DOMString entryId);
+
+  Promise&lt;AIAssistant&gt; connect(ConnectConfig connectConfig);
+  Promise&lt;AIAssistant&gt; create(optional AIAssistantCreateOptions options = {});
+  // ...
+};
+
+[Exposed=(Window,Worker)]
+interface AIAssistant : EventTarget {
+  Promise&lt;AIAssistant&gt; switchModel(DOMString modelName);
+  Promise&lt;DOMString&gt; prompt(DOMString input, optional AIAssistantPromptOptions options = {});
+  // ...
+};
+
+dictionary AIAssistantPromptOptions {
+  DOMString[] categories;
+  // ...
+};        
+      </code></pre>
+    </section>
+
+    <section class="slide" id="storage-api-usages">
+      <div>2. Storage API Sample Usages</div>
+      <pre><code class="language-javascript">// Web App A connects to a cloud-based model
+const remoteSession = await ai.connect(remoteConfig)
+
+// Web App A fetches flight info based on the user's travel plan
+const flightInfo = await remoteSession.prompt(userPlan)
+
+// Web App A stores the flight info in the user's personalized data
+await ai.insertEntry('travel', flightInfo)
+
+// =====================================================
+
+// Web App B connects to an on-device model
+const localSession = await ai.connect(localConfig)
+
+// Web App B stores the user's info into their personalized profile
+await ai.insertEntry('travel', userInfo)
+
+// Web App B uses the stored user data and flight info to suggest a list of hotels
+const hotelList = await localSession.prompt(hotelDemand, { categories: ['travel'] })
+      </code></pre>
+    </section>
+
+    <section class="slide" id="storage-api-references">
+      <div>3. Storage API Implementation References</div>
+      <pre><code class="language-javascript">import { ChromaClient } from 'chromadb'
+import { Chroma } from '@langchain/community/vectorstores/chroma'
+import { OllamaEmbeddings } from '@langchain/community/embeddings/ollama'
+
+// Define the collection name for the vector store, used to categorize and store entries
+const collectionName = 'opentiny'
+
+// Define Ollama settings, specifying the 'llama3:8b' model
+const ollamaSetting = { model: 'llama3:8b' }
+
+// Initialize Ollama embeddings with the specified model configuration
+const embeddings = new OllamaEmbeddings(ollamaSetting)
+
+// Function to insert a new entry into the Chroma vector store
+const insertEntry = async (category, content) => {
+  // Create a new Chroma vector store instance with the given embeddings and collection name
+  const vectorStore = new Chroma(embeddings, { collectionName })
+
+  // Add the document with the provided content and metadata (category)
+  const ids = await vectorStore.addDocuments([
+    {
+      pageContent: content, // The actual content to be stored
+      metadata: { category } // Metadata indicating the entry's category
+    }
+  ])
+
+  // Return the ID of the newly added entry
+  return ids[0]
+}
+
+// Function to update an existing entry in the Chroma vector store
+const updateEntry = async (entryId, content) => {
+  // Create a new Chroma vector store instance with the given embeddings and collection name
+  const vectorStore = new Chroma(embeddings, { collectionName })
+
+  // Update the document with the given content, matching it by entryId
+  const ids = await vectorStore.addDocuments(
+    [{ pageContent: content }], // The new content to update
+    { ids: [entryId] } // ID of the entry to update
+  )
+
+  // Return true if the entry was successfully updated, otherwise false
+  return ids[0] === entryId
+}
+
+// Function to remove an entry from the Chroma vector store
+const removeEntry = async (entryId) => {
+  // Create a new Chroma vector store instance with the given embeddings and collection name
+  const vectorStore = new Chroma(embeddings, { collectionName })
+
+  // Delete the document by its entry ID
+  await vectorStore.delete({ ids: [entryId] })
+
+  // Return true once the entry is successfully removed
+  return true
+}
+      </code></pre>
     </section>
 
     <section class="slide" id="showcase-app">
       <h3>A Showcase of Hybrid AI App</h3>
-      <ol class="emerge">
-        <li class="next">Making Travel Plan</li>
-        <li class="next">Booking Flight & Hotel Architecture</li>
-        <li class="next">Booking Flight & Hotel Demo</li>
-        <li class="next">Connection API Demo</li>
+      <ol>
+        <li>Making Travel Plan</li>
+        <li>Booking Flight & Hotel Architecture</li>
+        <li>Booking Flight & Hotel Demo</li>
+        <li>Connection API Demo</li>
       </ol>
+    </section>
+
+    <section class="slide" id="showcase-app-architecture">
+      <div>2. Booking Flight & Hotel Architecture</div>
+      <image src="WebHybridAI.png"></image>
+    </section>
+
+    <section class="slide" id="showcase-app-demo">
+      <div>3. Booking Flight & Hotel Demo</div>
+      <image src="demo.gif"></image>
+    </section>
+
+    <section class="slide" id="connection-api-config">
+      <div>4. Connection API Config</div>
+      <pre><code class="language-javascript">const config = {
+  // Cloud-based models
+  remotes: {
+    gemini: {
+      model: 'gemini-1.5-flash'
+    }
+  },
+  // On-device models
+  locals: {
+    llama: {
+      baseUrl: 'http://localhost:11434'
+    },
+    geminiNano: {
+      temperature: 0.8,
+      topK: 3
+    },
+    gemma: {
+      randomSeed: 1,
+      maxTokens: 1024
+    }
+  },
+  // Priority for accessing on-device models
+  local_priority: ['llama', 'geminiNano', 'gemma'],
+  // Models connection preference
+  prefer: 'remote'
+}
+
+// Connect to the remote Gemini model based on the above config
+const session1 = await ai.connect(config)
+const result1 = await session1.prompt('who are you')
+      </code></pre>
+    </section>
+
+    <section class="slide" id="connection-api-demo">
+      <div>4. Connection API Demo</div>
+      <image src="connect.gif" height="300"></image>
     </section>
 
     <section class="slide" id="connection-strategy">
@@ -133,7 +569,7 @@
 
     <section class="slide" id="discussion">
       <h3>Discussion</h3>
-      <ol class="emerge">
+      <ol>
         <li>Discuss possible resolutions</li>
         <li>Followup actions and collaborations</li>
       </ol>
