@@ -379,10 +379,10 @@ Some notes on this API:
 // Web App A connects to a cloud-based model
 const remoteSession = await ai.connect(remoteConfig)
 
-// Web App A fetches flight info based on the user’s travel plan
+// Web App A fetches flight info based on the user's travel plan
 const flightInfo = await remoteSession.prompt(userPlan)
 
-// Web App A stores the flight info in the user’s personalized data
+// Web App A stores the flight info in the user's personalized data
 await ai.insertEntry('travel', flightInfo)
 
 // =====================================================
